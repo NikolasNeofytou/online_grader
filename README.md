@@ -24,7 +24,6 @@ compiler output (for example forgetting the `std::` prefix for `cout`/`cin`), a
 hint is appended to the error message and the error line is highlighted in the
 editor.
 
-## Running tests
 
 ```bash
 pytest

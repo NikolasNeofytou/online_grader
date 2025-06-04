@@ -9,6 +9,7 @@ def test_compile_success():
     #include <iostream>
     int main() { std::cout << "ok"; return 0; }
     """)
+
     result = compile_code(code)
     assert "Compilation succeeded" in result["message"]
     assert "ok" in result["message"]
@@ -29,3 +30,8 @@ def test_missing_std_prefix_suggestion():
     result = compile_code(code)
     assert "Compilation failed" in result["message"]
     assert "Hint: Did you forget to prefix 'cout'" in result["message"]
+
+    output = compile_code(code)
+    assert "Compilation succeeded" in output
+    assert "ok" in output
+

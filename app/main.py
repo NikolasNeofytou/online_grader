@@ -2,7 +2,10 @@ from flask import Flask, render_template, request
 import subprocess
 import tempfile
 import os
+
 import re
+=======
+
 
 app = Flask(__name__)
 
@@ -13,6 +16,7 @@ def index():
     if request.method == 'POST':
         code = request.form.get('code', '')
         output = compile_code(code)
+
         code = output.get('code', code)
     return render_template('index.html', output=output, code=code)
 
@@ -27,20 +31,22 @@ def format_code(code: str) -> str:
     return code
 
 
-def compile_code(code: str) -> dict:
-    formatted = format_code(code)
+
+def compile_code(code: str) -> str:
     with tempfile.TemporaryDirectory() as tmpdir:
         source_path = os.path.join(tmpdir, 'main.cpp')
         with open(source_path, 'w') as f:
-            f.write(formatted)
+            f.write(code)
         exe_path = os.path.join(tmpdir, 'prog')
         result = subprocess.run(
-            ['g++', source_path, '-std=c++17', '-fdiagnostics-color=never', '-o', exe_path],
+            ['g++', source_path, '-o', exe_path],
+
             capture_output=True,
             text=True
         )
         if result.returncode == 0:
             run = subprocess.run([exe_path], capture_output=True, text=True)
+
             return {
                 'message': 'Compilation succeeded.\nProgram output:\n' + run.stdout,
                 'line': None,
