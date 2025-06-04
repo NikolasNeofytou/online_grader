@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Online C++ Grader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/darcula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/anyword-hint.min.js"></script>
+    <style>
+        body { background: #222; color: #eee; }
+        pre { background: #333; padding: 10px; color: #eee; }
+        .CodeMirror { height: 300px; }
+        .error-line { background: #402020 !important; }
+    </style>
+</head>
+<body>
+    <h1>Online C++ Grader</h1>
+    <form method="post" onsubmit="editor.save();">
+        <textarea id="code" name="code" placeholder="Enter your C++ code here">{{code}}</textarea>
+        <br>
+        <button type="submit">Compile</button>
+    </form>
+    {% if output %}
+    <h2>Result</h2>
+    <pre>{{output.message}}</pre>
+    {% endif %}
+    <script>
+        function complete(cm) { CodeMirror.showHint(cm, CodeMirror.hint.anyword, {completeSingle: false}); }
+        var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+            lineNumbers: true,
+            mode: 'text/x-c++src',
+            theme: 'darcula',
+            smartIndent: true,
+            extraKeys: {"Ctrl-Space": complete}
+        });
+        {% if output and output.line %}
+        editor.addLineClass({{output.line - 1}}, 'background', 'error-line');
+        {% endif %}
+    </script>
+</body>
+</html>
