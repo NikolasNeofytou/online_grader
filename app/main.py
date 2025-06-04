@@ -71,6 +71,15 @@ def compile_code(code: str) -> str:
             return 'Compilation failed:\n' + error_output
 
 
+@app.route('/api/compile', methods=['POST'])
+def api_compile():
+    """API endpoint for React front-end to compile code."""
+    data = request.get_json()
+    code = data.get('code', '')
+    output = compile_code(code)
+    return {'output': output}
+
+
 @app.route('/exercises', methods=['GET', 'POST'])
 def exercises_view():
     """Interactive exercises focused on using cout."""
