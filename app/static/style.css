@@ -1,0 +1,41 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+header {
+  background-color: #333;
+  color: white;
+  padding: 10px 20px;
+}
+.app-container {
+  max-width: 900px;
+  margin: 20px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+button {
+  margin-top: 10px;
+  padding: 8px 16px;
+}
+pre.output {
+  background: #eee;
+  padding: 10px;
+  white-space: pre-wrap;
+}
+nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 10px;
+}
+nav a {
+  color: #0069d9;
+  text-decoration: none;
+}
+nav a:hover {
+  text-decoration: underline;
+}

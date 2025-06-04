@@ -4,6 +4,9 @@ import tempfile
 import os
 import difflib
 
+import re
+
+
 app = Flask(__name__)
 app.secret_key = 'dev-secret-key'
 
@@ -59,7 +62,80 @@ def compile_code(code: str) -> str:
             run = subprocess.run([exe_path], capture_output=True, text=True)
             return 'Compilation succeeded.\nProgram output:\n' + run.stdout
         else:
-            return 'Compilation failed:\n' + result.stderr
+            error_output = result.stderr
+            suggestion = None
+            m = re.search(r"main.cpp:(\d+):(\d+): error: (.+)", error_output)
+            if m:
+                line, col, msg = m.groups()
+                suggestion = f"Possible error at line {line}, column {col}: {msg}"
+            if suggestion:
+                error_output += f"\nHint: {suggestion}"
+            return 'Compilation failed:\n' + error_output
+
+
+@app.route('/api/compile', methods=['POST'])
+def api_compile():
+    """API endpoint for React front-end to compile code."""
+    data = request.get_json()
+    code = data.get('code', '')
+    output = compile_code(code)
+    return {'output': output}
+
+
+@app.route('/exercises', methods=['GET', 'POST'])
+def exercises_view():
+    """Interactive exercises focused on using cout."""
+    idx = int(request.args.get('id', 0))
+    if idx < 0 or idx >= len(exercises):
+        return redirect(url_for('exercises_view', id=0))
+    exercise = exercises[idx]
+    code = ''
+    result = None
+
+    session.setdefault('attempts', {})
+    attempts = session['attempts'].get(str(idx), 0)
+
+    if request.method == 'POST':
+        code = request.form.get('code', '')
+        result = compile_code(code)
+        attempts += 1
+        session['attempts'][str(idx)] = attempts
+
+        # Provide feedback comparing actual program output with expected output
+        if 'Compilation succeeded' in result:
+            actual_output = ''
+            if 'Program output:\n' in result:
+                actual_output = result.split('Program output:\n', 1)[1].strip()
+            expected = exercise['expected_output']
+            if actual_output == expected:
+                result += '\nCorrect!'
+            else:
+                diff = '\n'.join(difflib.ndiff([expected], [actual_output]))
+                # Simple hint about the first mismatch
+                hint = None
+                for i, (a, b) in enumerate(zip(expected, actual_output)):
+                    if a != b:
+                        hint = f"Mismatch at character {i+1}: expected '{a}' but got '{b}'"
+                        break
+                if hint is None and len(expected) != len(actual_output):
+                    hint = "Output length differs from expected"
+                result += f"\nExpected output:\n{expected}\nDifferences:\n{diff}"
+                if hint:
+                    result += f"\nHint: {hint}"
+        else:
+            result += f"\nExpected output:\n{exercise['expected_output']}"
+
+    show_solution = attempts >= 3
+    return render_template(
+        'exercises.html',
+        exercises=exercises,
+        idx=idx,
+        exercise=exercise,
+        code=code,
+        result=result,
+        attempts=attempts,
+        show_solution=show_solution
+    )
 
 
 @app.route('/exercises', methods=['GET', 'POST'])
