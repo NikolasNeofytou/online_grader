@@ -17,3 +17,12 @@ def test_compile_failure():
     code = "int main() {"  # invalid code
     output = compile_code(code)
     assert "Compilation failed" in output
+
+def test_missing_std_prefix_suggestion():
+    code = textwrap.dedent("""
+    #include <iostream>
+    int main() { cout << "hi"; return 0; }
+    """)
+    output = compile_code(code)
+    assert "Compilation failed" in output
+    assert "Hint: Did you forget to prefix 'cout'" in output

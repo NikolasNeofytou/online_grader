@@ -21,7 +21,7 @@ def compile_code(code: str) -> str:
             f.write(code)
         exe_path = os.path.join(tmpdir, 'prog')
         result = subprocess.run(
-            ['g++', source_path, '-o', exe_path],
+            ['g++', source_path, '-std=c++17', '-o', exe_path],
             capture_output=True,
             text=True
         )
@@ -29,7 +29,13 @@ def compile_code(code: str) -> str:
             run = subprocess.run([exe_path], capture_output=True, text=True)
             return 'Compilation succeeded.\nProgram output:\n' + run.stdout
         else:
-            return 'Compilation failed:\n' + result.stderr
+            suggestion = ''
+            err = result.stderr
+            if 'cout' in err and 'declared' in err:
+                suggestion += "\nHint: Did you forget to prefix 'cout' with 'std::'?"
+            if 'cin' in err and 'declared' in err:
+                suggestion += "\nHint: Did you forget to prefix 'cin' with 'std::'?"
+            return 'Compilation failed:\n' + err + suggestion
 
 if __name__ == '__main__':
     app.run(debug=True)
