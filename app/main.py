@@ -3,7 +3,9 @@ import subprocess
 import tempfile
 import os
 import difflib
+
 import re
+
 
 app = Flask(__name__)
 app.secret_key = 'dev-secret-key'
@@ -120,6 +122,52 @@ def exercises_view():
                 result += f"\nExpected output:\n{expected}\nDifferences:\n{diff}"
                 if hint:
                     result += f"\nHint: {hint}"
+        else:
+            result += f"\nExpected output:\n{exercise['expected_output']}"
+
+    show_solution = attempts >= 3
+    return render_template(
+        'exercises.html',
+        exercises=exercises,
+        idx=idx,
+        exercise=exercise,
+        code=code,
+        result=result,
+        attempts=attempts,
+        show_solution=show_solution
+    )
+
+
+@app.route('/exercises', methods=['GET', 'POST'])
+def exercises_view():
+    """Interactive exercises focused on using cout."""
+    idx = int(request.args.get('id', 0))
+    if idx < 0 or idx >= len(exercises):
+        return redirect(url_for('exercises_view', id=0))
+    exercise = exercises[idx]
+    code = ''
+    result = None
+
+    session.setdefault('attempts', {})
+    attempts = session['attempts'].get(str(idx), 0)
+
+    if request.method == 'POST':
+        code = request.form.get('code', '')
+        result = compile_code(code)
+        attempts += 1
+        session['attempts'][str(idx)] = attempts
+
+        # Provide feedback comparing actual program output with expected output
+        if 'Compilation succeeded' in result:
+            actual_output = ''
+            if 'Program output:\n' in result:
+                actual_output = result.split('Program output:\n', 1)[1].strip()
+            expected = exercise['expected_output']
+            if actual_output == expected:
+                result += '\nCorrect!'
+            else:
+                diff = '\n'.join(difflib.ndiff([expected], [actual_output]))
+                result += f"\nExpected output:\n{expected}\nDifferences:\n{diff}"
         else:
             result += f"\nExpected output:\n{exercise['expected_output']}"
 

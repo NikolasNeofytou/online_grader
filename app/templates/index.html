@@ -11,15 +11,17 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="{{ url_for('exercises_view') }}">Exercises</a></li>
-            </ul>
-        </nav>
-    </header>
-    <div id="root"></div>
-    <script src="{{ url_for('static', filename='index.js') }}"></script>
+
+    <h1>Online C++ Grader</h1>
+    <p><a href="{{ url_for('exercises_view') }}">Try the cout exercises</a></p>
+    <form method="post">
+        <textarea name="code" placeholder="Enter your C++ code here">{{code}}</textarea>
+        <br>
+        <button type="submit">Compile</button>
+    </form>
+    {% if output %}
+    <h2>Result</h2>
+    <pre>{{output}}</pre>
+    {% endif %}
 </body>
 </html>
