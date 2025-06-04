@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 import os
 import difflib
+import re
 
 app = Flask(__name__)
 app.secret_key = 'dev-secret-key'
@@ -59,7 +60,15 @@ def compile_code(code: str) -> str:
             run = subprocess.run([exe_path], capture_output=True, text=True)
             return 'Compilation succeeded.\nProgram output:\n' + run.stdout
         else:
-            return 'Compilation failed:\n' + result.stderr
+            error_output = result.stderr
+            suggestion = None
+            m = re.search(r"main.cpp:(\d+):(\d+): error: (.+)", error_output)
+            if m:
+                line, col, msg = m.groups()
+                suggestion = f"Possible error at line {line}, column {col}: {msg}"
+            if suggestion:
+                error_output += f"\nHint: {suggestion}"
+            return 'Compilation failed:\n' + error_output
 
 
 @app.route('/exercises', methods=['GET', 'POST'])
@@ -91,7 +100,17 @@ def exercises_view():
                 result += '\nCorrect!'
             else:
                 diff = '\n'.join(difflib.ndiff([expected], [actual_output]))
+                # Simple hint about the first mismatch
+                hint = None
+                for i, (a, b) in enumerate(zip(expected, actual_output)):
+                    if a != b:
+                        hint = f"Mismatch at character {i+1}: expected '{a}' but got '{b}'"
+                        break
+                if hint is None and len(expected) != len(actual_output):
+                    hint = "Output length differs from expected"
                 result += f"\nExpected output:\n{expected}\nDifferences:\n{diff}"
+                if hint:
+                    result += f"\nHint: {hint}"
         else:
             result += f"\nExpected output:\n{exercise['expected_output']}"
 
